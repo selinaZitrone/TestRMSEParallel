@@ -45,5 +45,7 @@ parallel <- function(){
   ]
 }
 
+microbenchmark::microbenchmark(not_parallel(), parallel())
+
 
 
