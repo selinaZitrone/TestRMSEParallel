@@ -1,12 +1,14 @@
 library(data.table)
 library(collapse)
 
-load("dt1.RData")
 
+# prepare data ------------------------------------------------------------
+load("dt1.RData")
 dt3 <- rbind(dt1,dt1)
 dt3[,ID := rep(c("act","pred"), each = nrow(dt1))]
-# compare functions -------------------------------------------------------
 
+
+# columns to group by
 group_cols = c(
   "MAP", "MAT", "alpha", "lseas", "lambdar",
   "daily_diff_temp", "annual_diff_temp",
@@ -17,6 +19,9 @@ group_cols = c(
 # use all numeric columns except for the group_cols
 rmse_cols <- names(dt3)[sapply(dt3, is.numeric)]
 rmse_cols <- rmse_cols[!rmse_cols %in% group_cols]
+
+
+# define functions --------------------------------------------------------
 
 not_parallel <- function(){
   dt3[, lapply(.SD, function(x) {
@@ -44,6 +49,9 @@ parallel <- function(){
   .SDcols = rmse_cols
   ]
 }
+
+
+# benchmarking ------------------------------------------------------------
 
 microbenchmark::microbenchmark(not_parallel(), parallel())
 
