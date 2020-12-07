@@ -1,16 +1,22 @@
 library(data.table)
 library(collapse)
 
-githubURL <- "https://github.com/selinaZitrone/TestRMSEParallel/raw/master/DATASET.Rdata"
-load(url(githubURL))
+load("dt1.RData")
 
+dt3 <- rbind(dt1,dt1)
+dt3[,ID := rep(c("act","pred"), each = nrow(dt1))]
 # compare functions -------------------------------------------------------
 
 group_cols = c(
   "MAP", "MAT", "alpha", "lseas", "lambdar",
-  "daily_diff_temp",
+  "daily_diff_temp", "annual_diff_temp",
   "shift", "shiftdays", "soil"
 )
+
+# columns from which to calculate the rmse
+# use all numeric columns except for the group_cols
+rmse_cols <- names(dt3)[sapply(dt3, is.numeric)]
+rmse_cols <- rmse_cols[!rmse_cols %in% group_cols]
 
 not_parallel <- function(){
   dt3[, lapply(.SD, function(x) {
@@ -21,7 +27,7 @@ not_parallel <- function(){
       predicted = fsubset(x, ids == "pred"))
   }),
   by = group_cols,
-  .SDcols = letters]
+  .SDcols = rmse_cols]
 }
 
 parallel <- function(){
@@ -35,7 +41,7 @@ parallel <- function(){
 
   }, parallel = TRUE, mc.cores = parallel::detectCores(), drop = FALSE),
   by = group_cols,
-  .SDcols = letters
+  .SDcols = rmse_cols
   ]
 }
 
